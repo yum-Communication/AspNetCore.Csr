@@ -1,0 +1,17 @@
+GET
+  http://localhost:5000/users/25
+----
+GET
+  http://localhost:5000/users/
+----
+POST
+  http://localhost:5000/users/
+
+{
+  "hage": {
+    "code": "ABCD",
+    "name": "おなまえ",
+    "date": "2024-10-23T10:10:10.555",
+    "ary": [6126, 77, -2727, 106209]
+  }
+}

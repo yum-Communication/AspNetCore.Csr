@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "AspNetCore.Csr.CodeGen": {
+      "commandName": "Project"
+    },
+    "exc AspNetCore.Csr.CodeGen": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\ApiExample\\ApiExample.csproj"
+    }
+  }
+}
