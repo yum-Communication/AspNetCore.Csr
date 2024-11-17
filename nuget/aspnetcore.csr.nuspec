@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>YumCommu.AspNetCore.Csr</id>
+    <version>1.0.2</version>
+    <authors>yum communication, Ishina Yum</authors>
+    <license type="expression">Apache-2.0</license>
+    <licenseUrl>https://licenses.nuget.org/Apache-2.0</licenseUrl>
+    <projectUrl>https://github.com/yum-Communication/AspNetCore.Csr</projectUrl>
+    <description>AspNetCore using AoT</description>
+    <copyright>Copyright ©2024 yum communication Co., Ltd.</copyright>
+    <tags>.NET aspnetcore</tags>
+    <repository type="git" url="https://github.com/yum-Communication/AspNetCore.Csr" />
+    <readme>readme.md</readme>
+  </metadata>
+  <files>
+    <!--Architecture-neutral assemblies-->
+    <file src="..\AspNetCore.Csr\bin\Release\AspNetCore.Csr.dll" target="lib/net8.0" />
+    <file src="..\AspNetCore.Csr.CodeGen\bin\Release\AspNetCore.Csr.CodeGen.dll" target="analyzers/dotnet/roslyn4.0" />
+    <file src="..\nuget\readme.md" target="readme.md" />
+  </files>
+</package>

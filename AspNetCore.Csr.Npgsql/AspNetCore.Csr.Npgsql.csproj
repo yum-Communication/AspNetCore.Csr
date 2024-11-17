@@ -8,7 +8,24 @@
 
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <Company>yum communication</Company>
+    <Description>Npgsql Connection Helper for AspNetCore.Csr</Description>
+    <Copyright>Copyright ©2024 yum communication Co., Ltd.</Copyright>
+    <PackageProjectUrl>https://github.com/yum-Communication/AspNetCore.Csr</PackageProjectUrl>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/yum-Communication/AspNetCore.Csr</RepositoryUrl>
+    <PackageTags>.NET aspnetcore Npgsql</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>YumCommu.AspNetCore.Csr.Npgsql</PackageId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\nuget\readme.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Npgsql" Version="8.0.5" />

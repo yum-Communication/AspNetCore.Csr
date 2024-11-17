@@ -3,8 +3,7 @@ using System.Text.Json;
 
 namespace AspNetCore.Csr;
 
-public static class JsonHelper
-{
+public static class JsonHelper {
 	public static int ReadInt32(this JsonElement je, string key, int defValue) {
 		if (je.TryGetProperty(key, out var val)) {
 
@@ -39,6 +38,16 @@ public static class JsonHelper
 		if (je.TryGetProperty(key, out var val)) {
 
 			if (val.TryGetDouble(out var result)) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	public static decimal? ReadDecimal(this JsonElement je, string key) {
+		if (je.TryGetProperty(key, out var val)) {
+
+			if (val.TryGetDecimal(out var result)) {
 				return result;
 			}
 		}
@@ -115,8 +124,8 @@ public static class JsonHelper
 	}
 
 	public static Guid? ReadGuid(this JsonElement je, string key) {
-		if(je.TryGetProperty(key, out var val)) {
-			if(val.TryGetGuid(out var result)) {
+		if (je.TryGetProperty(key, out var val)) {
+			if (val.TryGetGuid(out var result)) {
 				return result;
 			}
 		}
@@ -160,6 +169,11 @@ public static class JsonHelper
 		}
 	}
 
+	public static void Write(Stream s, char c) {
+		byte[] b = Encoding.UTF8.GetBytes([c]);
+		s.Write(b, 0, b.Length);
+	}
+
 	public static void WriteValue(Stream s, string? str) {
 		if (str != null) {
 			byte[] b = Encoding.UTF8.GetBytes(Escape(str));
@@ -169,36 +183,112 @@ public static class JsonHelper
 
 	public static void WriteValue(Stream s, char? c) {
 		if (c != null) {
-			byte[] b = Encoding.UTF8.GetBytes(Escape(c.ToString()!));
+			byte[] b = Encoding.UTF8.GetBytes(Escape(c.Value.ToString()!));
 			s.Write(b, 0, b.Length);
 		}
+	}
+
+	public static void WriteValue(Stream s, char c) {
+		byte[] b = Encoding.UTF8.GetBytes(Escape(c.ToString()));
+		s.Write(b, 0, b.Length);
+	}
+
+	private static readonly byte[] strTrue = [0x74, 0x72, 0x75, 0x65];
+	private static readonly byte[] strFalse = [0x66, 0x61, 0x6C, 0x73, 0x65];
+
+	public static void WriteValue(Stream s, bool? v) {
+		if (v != null) {
+			byte[] b = v.Value ? strTrue : strFalse;
+			s.Write(b, 0, b.Length);
+		}
+	}
+
+	public static void WriteValue(Stream s, bool v) {
+		byte[] b = v ? strTrue : strFalse;
+		s.Write(b, 0, b.Length);
 	}
 
 	public static void WriteValue(Stream s, int? v) {
 		if (v != null) {
-			byte[] b = Encoding.UTF8.GetBytes(v.ToString()!);
+			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString()!);
 			s.Write(b, 0, b.Length);
 		}
+	}
+
+	public static void WriteValue(Stream s, int v) {
+		byte[] b = Encoding.UTF8.GetBytes(v.ToString());
+		s.Write(b, 0, b.Length);
 	}
 
 	public static void WriteValue(Stream s, long? v) {
 		if (v != null) {
-			byte[] b = Encoding.UTF8.GetBytes(v.ToString()!);
+			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString()!);
 			s.Write(b, 0, b.Length);
 		}
+	}
+
+	public static void WriteValue(Stream s, long v) {
+		byte[] b = Encoding.UTF8.GetBytes(v.ToString());
+		s.Write(b, 0, b.Length);
+	}
+
+	public static void WriteValue(Stream s, float? v) {
+		if (v != null) {
+			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString()!);
+			s.Write(b, 0, b.Length);
+		}
+	}
+
+	public static void WriteValue(Stream s, float v) {
+		byte[] b = Encoding.UTF8.GetBytes(v.ToString());
+		s.Write(b, 0, b.Length);
+	}
+
+	public static void WriteValue(Stream s, double? v) {
+		if (v != null) {
+			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString()!);
+			s.Write(b, 0, b.Length);
+		}
+	}
+
+	public static void WriteValue(Stream s, double v) {
+		byte[] b = Encoding.UTF8.GetBytes(v.ToString());
+		s.Write(b, 0, b.Length);
+	}
+
+	public static void WriteValue(Stream s, decimal? v) {
+		if (v != null) {
+			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString()!);
+			s.Write(b, 0, b.Length);
+		}
+	}
+
+	public static void WriteValue(Stream s, decimal v) {
+		byte[] b = Encoding.UTF8.GetBytes(v.ToString());
+		s.Write(b, 0, b.Length);
 	}
 
 	public static void WriteValue(Stream s, Guid? v) {
 		if (v != null) {
-			byte[] b = Encoding.UTF8.GetBytes(v.ToString()!);
+			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString()!);
 			s.Write(b, 0, b.Length);
 		}
 	}
 
+	public static void WriteValue(Stream s, Guid v) {
+		byte[] b = Encoding.UTF8.GetBytes(v.ToString());
+		s.Write(b, 0, b.Length);
+	}
+
 	public static void WriteValue(Stream s, DateTime? v) {
 		if (v != null) {
-			byte[] b = Encoding.UTF8.GetBytes(((DateTime)v).ToString("yyyy-MM-dd'T'HH:mm:ss.fffzzz"));
+			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString("yyyy-MM-dd'T'HH:mm:ss.fffzzz"));
 			s.Write(b, 0, b.Length);
 		}
+	}
+
+	public static void WriteValue(Stream s, DateTime v) {
+		byte[] b = Encoding.UTF8.GetBytes(v.ToString("yyyy-MM-dd'T'HH:mm:ss.fffzzz"));
+		s.Write(b, 0, b.Length);
 	}
 }

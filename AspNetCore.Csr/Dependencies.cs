@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace AspNetCore.Csr; 
 
 public static class Dependencies {
-	private static readonly Dictionary<string, DependencyFactory> dependencies;
+	private static readonly Dictionary<string, IDependencyFactory> dependencies;
 
 	static Dependencies() {
 		dependencies = new();
@@ -22,14 +22,14 @@ public static class Dependencies {
 		throw new KeyNotFoundException("Dependency name = " + name);
 	}
 
-	public static void Registration(string name, DependencyFactory df) {
+	public static void Registration(string name, IDependencyFactory df) {
 		dependencies.Add(name, df);
 	}
 }
 
 
 public static class Controllers {
-	private static readonly List<ControllerMapper> controllers;
+	private static readonly List<IControllerMapper> controllers;
 
 	static Controllers() {
 		controllers = new();
@@ -42,7 +42,7 @@ public static class Controllers {
 		}
 	}
 
-	public static void Registration(ControllerMapper df) {
+	public static void Registration(IControllerMapper df) {
 		controllers.Add(df);
 	}
 }

@@ -26,6 +26,14 @@ public class FromJsonAttribute: Attribute { }
 public class EntityAttribute: Attribute { }
 
 /// <summary>
+/// 列名指定の属性
+/// </summary>
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public class ColumnNameAttribute(string name): Attribute {
+	public string Name { get; } = name;
+}
+
+/// <summary>
 /// DBマッパーであることを表す属性
 /// </summary>
 [AttributeUsage(AttributeTargets.Interface)]
@@ -78,3 +86,10 @@ public class ExecuteAttribute(string sql): Attribute {
 	public string Sql { get; } = sql;
 }
 
+/// <summary>
+/// コンテキストのItemから値を取得する（ミドルウェアで入れているものを取得する用）
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter, Inherited = true)]
+public class FromExAttribute: Attribute {
+	public string? Name { get; set; }
+}

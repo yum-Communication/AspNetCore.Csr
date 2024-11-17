@@ -17,7 +17,8 @@ public class UserController(
 
 	[HttpGet]
 	public async Task<ApiResult> Get(
-		[FromQuery] string code
+		[FromQuery] string code,
+		[FromHeader] string[] cookie
 		) {
 
 		var user = await service.GetUser(code);

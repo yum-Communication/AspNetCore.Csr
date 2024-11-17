@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.Csr; 
 
-public interface DependencyFactory {
+public interface IDependencyFactory {
 	object Create();
 }
 
-public interface ControllerMapper {
+public interface IControllerMapper {
 	void Add(WebApplication app);
 }

@@ -12,6 +12,8 @@ public class Program {
 
 	private static string connStr = "Server=localhost;Port=5432;Username=***;Password=***;Database=tos";
 
+	public static WebApplication? App { get; private set; }
+
 	public static void Main(string[] args) {
 
 		// 依存性の初期化はオブジェクトを生成するだけ
@@ -58,6 +60,7 @@ public class Program {
 		// コントローラーのURLマッピング
 		AspNetCore.Csr.Controllers.Mapping(app);
 
+		App = app;
 		// アプリケーション実行
 		app.Run();
 	}

@@ -118,10 +118,19 @@ internal class PropertySyntaxInfo {
 	/// </summary>
 	public bool HasSetter { get; set; } = false;
 
+	/// <summary>
+	/// 基本型であるか
+	/// </summary>
+	public bool IsBasicType { get; set; } = false;
 
+	/// <summary>
+	/// プロパティの型の処理
+	/// </summary>
+	/// <param name="typeSymbol">プロパティの型</param>
 	public void SetReturnType(ITypeSymbol typeSymbol) {
 
 		ReturnFullType = typeSymbol.ToDisplayString();
+		// プロパティの型の末尾に'?'があればNULL許容型。
 		if (ReturnFullType.EndsWith("?")) {
 			ReturnFullTypeN = ReturnFullType.Substring(0, ReturnFullType.Length - 1);
 			IsNullable = true;
@@ -130,18 +139,25 @@ internal class PropertySyntaxInfo {
 		}
 
 		if (typeSymbol is IArrayTypeSymbol aryTypeSymbol) {
+			// 配列だった場合！
 			IsArrayReturnType = true;
 			ReturnTypeElem = aryTypeSymbol.ElementType.ToDisplayString();
 		} else if (typeSymbol is INamedTypeSymbol namedTypeSymbol) {
 			var x = namedTypeSymbol.TypeParameters;
 			if (x.Length > 0) {
+				// ジェネリック型！
+
 				if (namedTypeSymbol.Name == "Nullable") {
+					// null許容型はNullableジェネリッククラスであるため、その処理が必要！
+
+					// NULL許容となっている元の型。これがnull許容型であるはずがない。
 					var typeSymbol2 = namedTypeSymbol.TypeArguments.Last();
 					ReturnFullTypeN = typeSymbol2.ToDisplayString();
 
 					if (typeSymbol2 is INamedTypeSymbol namedTypeSymbol2) {
 						x = namedTypeSymbol2.TypeParameters;
 						if (x.Length > 0) {
+							// NULL許容であるジェネリック型の場合はここに来る
 							IsListReturnType = true;
 							var paramType = namedTypeSymbol2.TypeArguments.Last();
 							ReturnTypeElem = paramType.ToDisplayString();
@@ -160,6 +176,30 @@ internal class PropertySyntaxInfo {
 			IsNullable = true;
 		} else {
 			ReturnTypeElemN = ReturnTypeElem;
+		}
+
+		switch (ReturnTypeElemN) {
+		case "Bool":
+		case "DateTime":
+		case "Decimal":
+		case "Double":
+		case "Float":
+		case "Guid":
+		case "Int":
+		case "Long":
+		case "String":
+		case "System.DateTime":
+		case "System.Guid":
+		case "System.String":
+		case "bool":
+		case "decimal":
+		case "double":
+		case "float":
+		case "int":
+		case "long":
+		case "string":
+			IsBasicType = true;
+			break;
 		}
 	}
 }
