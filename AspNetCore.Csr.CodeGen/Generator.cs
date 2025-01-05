@@ -1203,30 +1203,34 @@ NEXT_MEMBER:
 			typ = typ.BaseType;
 		}
 
-
 		genText.Append($$"""
 		public static {{className}} FromDbResult(System.Data.Common.DbDataReader r) {
 			{{className}} v = new();
 			int idx = 0;
+			int z = r.FieldCount;
+			Dictionary<string,int> cnd = new();
+			for (int fx = 0; fx < z; ++fx) {
+				cnd.Add(r.GetName(fx), fx);
+			}
 
 """);
 
 		foreach (var it in entityColumns) {
 			if (it.AttrName != string.Empty) {
-				genText.Append("\t\t\tidx = DataHelper.GetOrdinal(r, \"").Append(it.AttrName).Append("\");\n");
+				genText.Append("\t\t\tidx = DataHelper.GetOrdinal(cnd, \"").Append(it.AttrName).Append("\");\n");
 			} else {
 				if (it.ColumnName != it.SnakeCase1 && it.SnakeCase1 != it.SnakeCase2) {
 					// 3つとも違う
-					genText.Append("			idx = DataHelper.GetOrdinal(r, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase1).Append("\", \"").Append(it.SnakeCase2).Append("\");\n");
+					genText.Append("			idx = DataHelper.GetOrdinal(cnd, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase1).Append("\", \"").Append(it.SnakeCase2).Append("\");\n");
 				} else if (it.SnakeCase1 != it.ColumnName) {
 					// snakeCase1 と snakeCase2 が同じ
-					genText.Append("			idx = DataHelper.GetOrdinal(r, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase1).Append("\");\n");
+					genText.Append("			idx = DataHelper.GetOrdinal(cnd, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase1).Append("\");\n");
 				} else if (it.SnakeCase1 != it.SnakeCase2) {
 					// snakeCase1 と 元の名前 が同じ
-					genText.Append("			idx = DataHelper.GetOrdinal(r, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase2).Append("\");\n");
+					genText.Append("			idx = DataHelper.GetOrdinal(cnd, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase2).Append("\");\n");
 				} else {
 					// ぜんぶ同じ
-					genText.Append("			idx = DataHelper.GetOrdinal(r, \"").Append(it.ColumnName).Append("\");\n");
+					genText.Append("			idx = DataHelper.GetOrdinal(cnd, \"").Append(it.ColumnName).Append("\");\n");
 				}
 			}
 
@@ -1241,25 +1245,30 @@ NEXT_MEMBER:
 		}
 
 		public static async System.Threading.Tasks.Task<System.Collections.Generic.List<{{className}}>> FromDbResultsAsync(System.Data.Common.DbDataReader r) {
+			int z = r.FieldCount;
+			Dictionary<string,int> cnd = new();
+			for (int fx = 0; fx < z; ++fx) {
+				cnd.Add(r.GetName(fx), fx);
+			}
 
 """);
 		// 各カラムのインデックスを拾う処理
 		foreach (var it in entityColumns) {
 			if (it.AttrName != string.Empty) {
-				genText.Append("\t\t\tint ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(r, \"").Append(it.AttrName).Append("\");\n");
+				genText.Append("\t\t\tint ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(cnd, \"").Append(it.AttrName).Append("\");\n");
 			} else {
 				if (it.ColumnName != it.SnakeCase1 && it.SnakeCase1 != it.SnakeCase2) {
 					// 3つとも違う
-					genText.Append("			int ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(r, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase1).Append("\", \"").Append(it.SnakeCase2).Append("\");\n");
+					genText.Append("			int ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(cnd, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase1).Append("\", \"").Append(it.SnakeCase2).Append("\");\n");
 				} else if (it.SnakeCase1 != it.ColumnName) {
 					// snakeCase1 と snakeCase2 が同じ
-					genText.Append("			int ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(r, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase1).Append("\");\n");
+					genText.Append("			int ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(cnd, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase1).Append("\");\n");
 				} else if (it.SnakeCase1 != it.SnakeCase2) {
 					// snakeCase1 と 元の名前 が同じ
-					genText.Append("			int ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(r, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase2).Append("\");\n");
+					genText.Append("			int ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(cnd, \"").Append(it.ColumnName).Append("\", \"").Append(it.SnakeCase2).Append("\");\n");
 				} else {
 					// ぜんぶ同じ
-					genText.Append("			int ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(r, \"").Append(it.ColumnName).Append("\");\n");
+					genText.Append("			int ").Append(it.ColumnName).Append("_idx = DataHelper.GetOrdinal(cnd, \"").Append(it.ColumnName).Append("\");\n");
 				}
 			}
 		}

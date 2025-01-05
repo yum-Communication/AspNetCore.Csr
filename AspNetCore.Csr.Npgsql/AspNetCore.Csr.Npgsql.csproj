@@ -18,10 +18,11 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>YumCommu.AspNetCore.Csr.Npgsql</PackageId>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\nuget\readme.md">
+    <None Include="..\nuget\Npgsql\readme.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>

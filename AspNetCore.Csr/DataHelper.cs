@@ -38,6 +38,38 @@ public static class DataHelper {
 		}
 	}
 
+	public static int GetOrdinal(Dictionary<string,int> cnd, string name) {
+		int index;
+		if(cnd.TryGetValue(name, out index)) {
+			return index;
+		}
+		return -1;
+	}
+	public static int GetOrdinal(Dictionary<string, int> cnd, string name, string name2) {
+		int index;
+		if (cnd.TryGetValue(name, out index)) {
+			return index;
+		}
+		if (cnd.TryGetValue(name2, out index)) {
+			return index;
+		}
+		return -1;
+	}
+	public static int GetOrdinal(Dictionary<string, int> cnd, string name, string name2, string name3) {
+		int index;
+		if (cnd.TryGetValue(name, out index)) {
+			return index;
+		}
+		if (cnd.TryGetValue(name2, out index)) {
+			return index;
+		}
+		if (cnd.TryGetValue(name3, out index)) {
+			return index;
+		}
+		return -1;
+	}
+
+
 	public static void AddWithValue(this DbCommand cmd, string name, bool? value) {
 		DbParameter param = cmd.CreateParameter();
 		param.ParameterName = name;
@@ -59,6 +91,14 @@ public static class DataHelper {
 		param.ParameterName = name;
 		param.Value = value == null ? DBNull.Value : value;
 		param.DbType = System.Data.DbType.Int64;
+		cmd.Parameters.Add(param);
+	}
+
+	public static void AddWithValue(this DbCommand cmd, string name, double? value) {
+		DbParameter param = cmd.CreateParameter();
+		param.ParameterName = name;
+		param.Value = value == null ? DBNull.Value : value;
+		param.DbType = System.Data.DbType.Double;
 		cmd.Parameters.Add(param);
 	}
 

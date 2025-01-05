@@ -41,6 +41,14 @@ public static class DataHelper {
 		cmd.Parameters.Add(param);
 	}
 
+	public static void AddWithValue(this DbCommand dbCmd, string name, double? value) {
+		NpgsqlCommand cmd = (NpgsqlCommand)dbCmd;
+
+		var param = new NpgsqlParameter(name, NpgsqlDbType.Double);
+		param.Value = value == null ? DBNull.Value : value;
+		cmd.Parameters.Add(param);
+	}
+
 	public static void AddWithValue(this DbCommand dbCmd, string name, decimal? value) {
 		NpgsqlCommand cmd = (NpgsqlCommand)dbCmd;
 
