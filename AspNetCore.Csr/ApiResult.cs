@@ -1,21 +1,44 @@
 ﻿using Microsoft.Extensions.Primitives;
 using System.Text.Json;
 
-namespace AspNetCore.Csr; 
+namespace AspNetCore.Csr;
 
-public class EmptyResult {
-	public int Code { get; set; } = 200;
-	public Dictionary<string, StringValues> Headers = new();
-	public string ContentType = string.Empty;
-}
 
-public class ApiResult : EmptyResult {
+public class ApiResult: EmptyResult {
 	public IToJsonData? Data { get; set; }
 
-	public ApiResult() {
-		ContentType = "application/json";
+	/// <summary>
+	/// コンストラクタ
+	/// </summary>
+	public ApiResult() : base("application/json") {
+	}
+
+	/// <summary>
+	/// コンストラクタ
+	/// </summary>
+	/// <param name="code">HTTPステータスコード</param>
+	public ApiResult(int code) : base(code, "application/json") {
+	}
+
+	/// <summary>
+	/// コンストラクタ
+	/// </summary>
+	/// <param name="data">データ</param>
+	public ApiResult(IToJsonData data) : base("application/json") {
+		Data = data;
+	}
+
+	/// <summary>
+	/// コンストラクタ
+	/// </summary>
+	/// <param name="code">HTTPステータスコード</param>
+	/// <param name="data">データ</param>
+	public ApiResult(int code, IToJsonData data) : base(code, "application/json") {
+		Data = data;
 	}
 }
+
+
 
 public interface IToJsonData {
 	void Serialize(Stream s);

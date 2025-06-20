@@ -88,6 +88,7 @@ public class Generator: IIncrementalGenerator {
 #pragma warning disable
 #nullable enable
 using AspNetCore.Csr;
+using Microsoft.AspNetCore.Builder;
 
 namespace {{namespaceStr}} {
 
@@ -1208,7 +1209,7 @@ NEXT_MEMBER:
 			{{className}} v = new();
 			int idx = 0;
 			int z = r.FieldCount;
-			Dictionary<string,int> cnd = new();
+			System.Collections.Generic.Dictionary<string,int> cnd = new();
 			for (int fx = 0; fx < z; ++fx) {
 				cnd.Add(r.GetName(fx), fx);
 			}
@@ -1246,7 +1247,7 @@ NEXT_MEMBER:
 
 		public static async System.Threading.Tasks.Task<System.Collections.Generic.List<{{className}}>> FromDbResultsAsync(System.Data.Common.DbDataReader r) {
 			int z = r.FieldCount;
-			Dictionary<string,int> cnd = new();
+			System.Collections.Generic.Dictionary<string,int> cnd = new();
 			for (int fx = 0; fx < z; ++fx) {
 				cnd.Add(r.GetName(fx), fx);
 			}

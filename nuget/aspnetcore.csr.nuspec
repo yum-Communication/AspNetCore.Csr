@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>YumCommu.AspNetCore.Csr</id>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <authors>yum communication, Ishina Yum</authors>
     <license type="expression">Apache-2.0</license>
     <licenseUrl>https://licenses.nuget.org/Apache-2.0</licenseUrl>

@@ -55,7 +55,7 @@ public static class HttpContextUtility {
 
 			if (result.Data != null) {
 				var bytes = Encoding.UTF8.GetBytes(result.Data);
-				response.Headers.ContentType = result.ContentType + "; charset=UTF-8";
+				response.Headers.ContentType = result.ContentType;
 				response.ContentLength = bytes.Length;
 				await response.Body.WriteAsync(bytes, 0, bytes.Length, CancellationToken.None);
 			} else {
@@ -77,17 +77,41 @@ public static class HttpContextUtility {
 				response.Headers.Add(it);
 			}
 
+			response.Headers.ContentType = result.ContentType;
 			if (result.Data != null) {
 				Stream s = result.Data;
 				if (s.CanSeek) {
 					s.Position = 0;
 				}
-				response.Headers.ContentType = result.ContentType;
 				response.ContentLength = s.Length;
-				await s.CopyToAsync(response.Body);
-
+				if (s.Length > 0) {
+					await s.CopyToAsync(response.Body);
+				}
 				s.Close();
 				s.Dispose();
+			} else {
+				response.ContentLength = 0;
+			}
+		}
+	}
+
+	/// <summary>
+	/// byte列をレスポンスに出力する
+	/// </summary>
+	/// <param name="context"></param>
+	/// <param name="result"></param>
+	public static async Task Output(HttpContext context, ByteArrayResult? result) {
+		if (result != null) {
+			var response = context.Response;
+			response.StatusCode = result.Code;
+			foreach (var it in result.Headers) {
+				response.Headers.Add(it);
+			}
+
+			response.Headers.ContentType = result.ContentType;
+			if (result.Data != null && result.Data.Length > 0) {
+				response.ContentLength = result.Data.Length;
+				await response.Body.WriteAsync(result.Data, 0, result.Data.Length);
 			} else {
 				response.ContentLength = 0;
 			}
