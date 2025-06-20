@@ -18,6 +18,11 @@ public class ToJsonAttribute: Attribute { }
 [AttributeUsage(AttributeTargets.Class)]
 public class FromJsonAttribute: Attribute { }
 
+/// <summary>
+/// 基本型のListであることを表す属性
+/// </summary>
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public class PrimitiveListAttribute: Attribute { }
 
 /// <summary>
 /// Entityクラスであることを表す属性

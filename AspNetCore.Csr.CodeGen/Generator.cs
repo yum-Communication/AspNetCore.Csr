@@ -30,7 +30,6 @@ public class Generator: IIncrementalGenerator {
 	/// <param name="context"></param>
 	public void Initialize(IncrementalGeneratorInitializationContext context) {
 
-		Debug.WriteLine("Initialize");
 		IncrementalValuesProvider<(SyntaxNode, INamedTypeSymbol)> entitySyntaxProvider = context.SyntaxProvider.CreateSyntaxProvider(
 			static (SyntaxNode node, CancellationToken token) =>
 			{
@@ -147,7 +146,7 @@ namespace {{namespaceStr}} {
 				}
 				Dictionary<string, MemberSyntaxInfo> miDic = new();
 				Dictionary<string, PropertySyntaxInfo> piDic = new();
-				GetMemberSyntaxInfo(clsSyntax, miDic, piDic);
+				GetMemberSyntaxInfo(spc, clsSyntax, miDic, piDic);
 
 				if (isService) {
 					OutputServiceInterface(tpl.clsSymbol, accessor, miDic, piDic, className, interfaceName, text);
@@ -263,7 +262,15 @@ namespace {{namespaceStr}} {
 	/// </summary>
 	/// <param name="tpl"></param>
 	/// <param name="miDic"></param>
-	private static void GetMemberSyntaxInfo(ClassDeclarationSyntax clsSyntax, Dictionary<string, MemberSyntaxInfo> miDic, Dictionary<string, PropertySyntaxInfo> piDic) {
+	private static void GetMemberSyntaxInfo(SourceProductionContext spc, ClassDeclarationSyntax clsSyntax, Dictionary<string, MemberSyntaxInfo> miDic, Dictionary<string, PropertySyntaxInfo> piDic) {
+		var errDescDuplicatedMethod = new DiagnosticDescriptor(
+			id: "YG0001",
+			title: "メソッドのオーバーロードには対応していません",
+			messageFormat: "メソッド名 '{0}' が他に存在しています",
+			category: "AspNetCoreCsr.Generator",
+			DiagnosticSeverity.Error,
+			isEnabledByDefault: true);
+
 		foreach (MemberDeclarationSyntax memberSyntax in clsSyntax.Members) {
 			if (memberSyntax is MethodDeclarationSyntax methodDeclSymbol) {
 
@@ -299,8 +306,17 @@ namespace {{namespaceStr}} {
 				}
 
 				mi.Name = methodDeclSymbol.Identifier.Text;
-				mi.ReturnType = methodDeclSymbol.ReturnType.ToFullString();
-				miDic.Add(mi.Name, mi);
+				if (miDic.ContainsKey(mi.Name)) {
+					var diagnostic = Diagnostic.Create(errDescDuplicatedMethod, methodDeclSymbol.GetLocation(), mi.Name);
+
+					// エラーを報告
+					spc.ReportDiagnostic(diagnostic);
+
+				} else {
+					mi.ReturnType = methodDeclSymbol.ReturnType.ToFullString();
+					miDic.Add(mi.Name, mi);
+				}
+
 			} else if (memberSyntax is PropertyDeclarationSyntax propertyDeclSyntax) {
 				PropertySyntaxInfo pi = new();
 				foreach (SyntaxToken token in propertyDeclSyntax.Modifiers) {
@@ -328,8 +344,17 @@ namespace {{namespaceStr}} {
 					}
 				}
 				pi.Name = propertyDeclSyntax.Identifier.Text;
-				pi.ReturnType = propertyDeclSyntax.Type.ToFullString();
-				piDic.Add(pi.Name, pi);
+				if (piDic.ContainsKey(pi.Name)) {
+					// 既に登録されている場合はエラーを作成
+					var diagnostic = Diagnostic.Create(errDescDuplicatedMethod, propertyDeclSyntax.GetLocation(), pi.Name);
+
+					// エラーを報告
+					spc.ReportDiagnostic(diagnostic);
+
+				} else {
+					pi.ReturnType = propertyDeclSyntax.Type.ToFullString();
+					piDic.Add(pi.Name, pi);
+				}
 			}
 NEXT_MEMBER:
 			;
@@ -805,7 +830,30 @@ NEXT_MEMBER:
 				if (it.DeclaredAccessibility != Accessibility.Public && it.DeclaredAccessibility != Accessibility.Internal) { continue; }
 
 				if (it is IPropertySymbol symbol) {
-					string dataMemberName = GetDataMemberName(symbol, it.Name);
+					bool isPrimitiveList = false;
+					string dataMemberName = it.Name;
+					foreach (var attr in symbol.GetAttributes()) {
+						string attrName = attr.AttributeClass!.Name;
+						// IgnoreDataMemberの方が強い。入出力メンバとして扱わない
+						if (attrName == "IgnoreDataMemberAttribute") {
+							goto ExitLoop;
+						}
+
+						// DataMember属性が指定されている場合、その名前を使う
+						if (attrName == "DataMemberAttribute") {
+							if (attr.NamedArguments.Length > 0) {
+
+								foreach (var ana in attr.NamedArguments) {
+									if (ana.Key == "Name" && ana.Value.Value != null) {
+										dataMemberName = (string)ana.Value.Value;
+									}
+								}
+							}
+						} else if (attrName == "PrimitiveListAttribute") {
+							isPrimitiveList = true;
+						}
+					}
+
 					PropertySyntaxInfo propSyntaxInfo = new();
 					propSyntaxInfo.SetReturnType(symbol.Type);
 
@@ -861,14 +909,14 @@ NEXT_MEMBER:
 					default:
 						if (propSyntaxInfo.IsListReturnType) {
 							// List の場合
-							genText.Append($"\t\t\tList<{propSyntaxInfo.ReturnTypeElemN}>? a_{it.Name} = JsonHelper.ReadList(je, \"{dataMemberName}\", jc =>");
-							ProcListElement(genText, propSyntaxInfo);
+							genText.Append($"\t\t\tSystem.Collections.Generic.List<{propSyntaxInfo.ReturnTypeElemN}>? a_{it.Name} = JsonHelper.ReadList(je, \"{dataMemberName}\", jc =>");
+							ProcListElement(genText, propSyntaxInfo, isPrimitiveList);
 							genText.Append(");\n");
 
 						} else if (propSyntaxInfo.IsListReturnType) {
 							// 配列の場合
 							genText.Append($"\t\t\t{propSyntaxInfo.ReturnTypeElemN}[]? a_{it.Name} = JsonHelper.ReadList(je, \"{dataMemberName}\", jc =>");
-							ProcListElement(genText, propSyntaxInfo);
+							ProcListElement(genText, propSyntaxInfo, isPrimitiveList);
 							genText.Append(")?.ToArray();\n");
 
 						} else {
@@ -883,6 +931,8 @@ NEXT_MEMBER:
 						initializing.Append("\t\t\tif (a_").Append(it.Name).Append(" != null) { ret.").Append(it.Name).Append(" = (").Append(propSyntaxInfo.ReturnFullTypeN).Append(")").Append(cast).Append("a_").Append(it.Name).Append("; }\n");
 					}
 				}
+ExitLoop:
+				;
 			}
 
 			typ = typ.BaseType;
@@ -899,7 +949,7 @@ NEXT_MEMBER:
 	}
 
 
-	private static void ProcListElement(StringBuilder genText, PropertySyntaxInfo propSyntaxInfo) {
+	private static void ProcListElement(StringBuilder genText, PropertySyntaxInfo propSyntaxInfo, bool isPrimitiveList) {
 		switch (propSyntaxInfo.ReturnTypeElemN) {
 		case "bool":
 			genText.Append("jc.GetBool()");
@@ -939,6 +989,7 @@ NEXT_MEMBER:
 
 		default:
 			// オブジェクトの場合
+
 			genText.Append('(').Append(propSyntaxInfo.ReturnTypeElemN).Append(')').Append(propSyntaxInfo.ReturnTypeElemN).Append(".Deserialize(jc)");
 			break;
 		}
@@ -968,8 +1019,31 @@ NEXT_MEMBER:
 				if (it.DeclaredAccessibility != Accessibility.Public && it.DeclaredAccessibility != Accessibility.Internal) { continue; }
 
 				if (it is IPropertySymbol symbol) {
+					bool isPrimitiveList = false;
 					string memberName = it.Name;
-					string dataMemberName = GetDataMemberName(symbol, memberName);
+					string dataMemberName = memberName;
+					foreach (var attr in symbol.GetAttributes()) {
+						string attrName = attr.AttributeClass!.Name;
+						// IgnoreDataMemberの方が強い。入出力メンバとして扱わない
+						if (attrName == "IgnoreDataMemberAttribute") {
+							goto ExitLoop;
+						}
+
+						// DataMember属性が指定されている場合、その名前を使う
+						if (attrName == "DataMemberAttribute") {
+							if (attr.NamedArguments.Length > 0) {
+
+								foreach (var ana in attr.NamedArguments) {
+									if (ana.Key == "Name" && ana.Value.Value != null) {
+										dataMemberName = (string)ana.Value.Value;
+									}
+								}
+							}
+						} else if (attrName == "PrimitiveListAttribute") {
+							isPrimitiveList = true;
+						}
+					}
+
 					PropertySyntaxInfo propSyntaxInfo = new();
 					propSyntaxInfo.SetReturnType(symbol.Type);
 
@@ -986,6 +1060,12 @@ NEXT_MEMBER:
 					case "float":
 					case "int":
 					case "long":
+					case "String":
+					case "string":
+					case "System.DateTime":
+					case "DateTime":
+					case "System.Guid":
+					case "Guid":
 						if (propSyntaxInfo.IsNullable) {
 							genText.Append($$"""
 			if ({{memberName}} != null) {
@@ -1001,35 +1081,6 @@ NEXT_MEMBER:
 			if (bx > 0) { JsonHelper.Write(s, ","); }
 			JsonHelper.Write(s, "\"{{dataMemberName}}\": ");
 			JsonHelper.WriteValue(s, {{memberName}});
-			++bx;
-
-""");
-						}
-						break;
-
-					case "String":
-					case "string":
-					case "System.DateTime":
-					case "DateTime":
-					case "System.Guid":
-					case "Guid":
-						if (propSyntaxInfo.IsNullable) {
-							genText.Append($$"""
-			if ({{memberName}} != null) {
-				if (bx > 0) { JsonHelper.Write(s, ","); }
-				JsonHelper.Write(s, "\"{{dataMemberName}}\": \"");
-				JsonHelper.WriteValue(s, {{memberName}});
-				JsonHelper.Write(s, "\"");
-				++bx;
-			}
-
-""");
-						} else {
-							genText.Append($$"""
-			if (bx > 0) { JsonHelper.Write(s, ","); }
-			JsonHelper.Write(s, "\"{{dataMemberName}}\": \"");
-			JsonHelper.WriteValue(s, {{memberName}});
-			JsonHelper.Write(s, "\"");
 			++bx;
 
 """);
@@ -1052,9 +1103,11 @@ NEXT_MEMBER:
 
 """);
 								if (propSyntaxInfo.IsBasicType) {
-									genText.Append("					JsonHelper.WriteValue(s, it);\n");
+									genText.Append("\t\t\t\t\tJsonHelper.WriteValue(s, it);\n");
+								} else if (isPrimitiveList || propSyntaxInfo.IsBasicType) {
+									genText.Append("\t\t\t\t\tJsonHelper.WritePrimitive(s, it);\n");
 								} else {
-									genText.Append($"\t\t\t\t\tit.Serialize(s);;\n");
+									genText.Append("\t\t\t\t\tit.Serialize(s);\n");
 								}
 
 								genText.Append($$"""
@@ -1077,9 +1130,11 @@ NEXT_MEMBER:
 
 """);
 								if (propSyntaxInfo.IsBasicType) {
-									genText.Append("				JsonHelper.WriteValue(s, it);\n");
+									genText.Append("\t\t\t\tJsonHelper.WriteValue(s, it);\n");
+								} else if (isPrimitiveList) {
+									genText.Append("\t\t\t\tJsonHelper.WritePrimitive(s, it);\n");
 								} else {
-									genText.Append("\t\t\t\tit.Serialize(s);;\n");
+									genText.Append("\t\t\t\tit.Serialize(s);\n");
 								}
 								genText.Append($$"""
 				++cx;
@@ -1114,6 +1169,8 @@ NEXT_MEMBER:
 						break;
 					}
 				}
+ExitLoop:
+				;
 			}
 			typ = typ.BaseType;
 		}
@@ -1122,7 +1179,7 @@ NEXT_MEMBER:
 	}
 
 
-	private static string GetDataMemberName(IPropertySymbol symbol, string name) {
+	private static string GetDataMemberName(ISymbol symbol, string name) {
 		foreach (var attr in symbol.GetAttributes()) {
 			string attrName = attr.AttributeClass!.Name;
 			if (attrName == "DataMemberAttribute") {
@@ -1287,7 +1344,7 @@ NEXT_MEMBER:
 			//if (it.IsNullable) {
 			//	genText.Append("\t\t\t\tv.").Append(it.ColumnName).Append(" = (").Append(it.ColumnName).Append("_idx < 0 || r.IsDBNull(").Append(it.ColumnName).Append("_idx)) ? null : r.Get").Append(it.ReaderTypeName).Append('(').Append(it.ColumnName).Append("_idx);\n");
 			//} else {
-				genText.Append("\t\t\t\tif (").Append(it.ColumnName).Append("_idx >= 0 && !r.IsDBNull(").Append(it.ColumnName).Append("_idx)) { v.").Append(it.ColumnName).Append(" = r.Get").Append(it.ReaderTypeName).Append('(').Append(it.ColumnName).Append("_idx); }\n");
+			genText.Append("\t\t\t\tif (").Append(it.ColumnName).Append("_idx >= 0 && !r.IsDBNull(").Append(it.ColumnName).Append("_idx)) { v.").Append(it.ColumnName).Append(" = r.Get").Append(it.ReaderTypeName).Append('(').Append(it.ColumnName).Append("_idx); }\n");
 			//}
 		}
 

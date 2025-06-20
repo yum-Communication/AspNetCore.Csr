@@ -8,6 +8,7 @@ using System.Text.Json;
 namespace ApiExample.Models;
 
 [FromJson]
+[ToJson]
 public partial class DummyRequest
 {
 	[DataMember(Name = "user")]
@@ -19,4 +20,5 @@ public partial class DummyRequest
 
 	public decimal Price { get; set; } = 0;
 
+	public List<int> Codes { get; set; } = new();
 }

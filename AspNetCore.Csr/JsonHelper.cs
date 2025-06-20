@@ -162,6 +162,7 @@ public static class JsonHelper {
 		return str;
 	}
 
+
 	public static void Write(Stream s, string str) {
 		if (str != null) {
 			byte[] b = Encoding.UTF8.GetBytes(str);
@@ -169,30 +170,50 @@ public static class JsonHelper {
 		}
 	}
 
+
 	public static void Write(Stream s, char c) {
 		byte[] b = Encoding.UTF8.GetBytes([c]);
 		s.Write(b, 0, b.Length);
 	}
 
+
+	public static void WritePrimitive(Stream s, ValueType? p) {
+		if (p != null) {
+			string? str = p.ToString();
+			if (str != null && str.Length > 0) {
+				byte[] b = Encoding.UTF8.GetBytes(str);
+				s.Write(b, 0, b.Length);
+			}
+		}
+	}
+
+
 	public static void WriteValue(Stream s, string? str) {
 		if (str != null) {
 			byte[] b = Encoding.UTF8.GetBytes(Escape(str));
+			s.Write(strQuote, 0, 1);
 			s.Write(b, 0, b.Length);
+			s.Write(strQuote, 0, 1);
 		}
 	}
 
 	public static void WriteValue(Stream s, char? c) {
 		if (c != null) {
 			byte[] b = Encoding.UTF8.GetBytes(Escape(c.Value.ToString()!));
+			s.Write(strQuote, 0, 1);
 			s.Write(b, 0, b.Length);
+			s.Write(strQuote, 0, 1);
 		}
 	}
 
 	public static void WriteValue(Stream s, char c) {
 		byte[] b = Encoding.UTF8.GetBytes(Escape(c.ToString()));
+		s.Write(strQuote, 0, 1);
 		s.Write(b, 0, b.Length);
+		s.Write(strQuote, 0, 1);
 	}
 
+	private static readonly byte[] strQuote = [0x22];
 	private static readonly byte[] strTrue = [0x74, 0x72, 0x75, 0x65];
 	private static readonly byte[] strFalse = [0x66, 0x61, 0x6C, 0x73, 0x65];
 
@@ -271,24 +292,33 @@ public static class JsonHelper {
 	public static void WriteValue(Stream s, Guid? v) {
 		if (v != null) {
 			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString()!);
+
+			s.Write(strQuote, 0, 1);
 			s.Write(b, 0, b.Length);
+			s.Write(strQuote, 0, 1);
 		}
 	}
 
 	public static void WriteValue(Stream s, Guid v) {
 		byte[] b = Encoding.UTF8.GetBytes(v.ToString());
+		s.Write(strQuote, 0, 1);
 		s.Write(b, 0, b.Length);
+		s.Write(strQuote, 0, 1);
 	}
 
 	public static void WriteValue(Stream s, DateTime? v) {
 		if (v != null) {
 			byte[] b = Encoding.UTF8.GetBytes(v.Value.ToString("yyyy-MM-dd'T'HH:mm:ss.fffzzz"));
+			s.Write(strQuote, 0, 1);
 			s.Write(b, 0, b.Length);
+			s.Write(strQuote, 0, 1);
 		}
 	}
 
 	public static void WriteValue(Stream s, DateTime v) {
 		byte[] b = Encoding.UTF8.GetBytes(v.ToString("yyyy-MM-dd'T'HH:mm:ss.fffzzz"));
+		s.Write(strQuote, 0, 1);
 		s.Write(b, 0, b.Length);
+		s.Write(strQuote, 0, 1);
 	}
 }

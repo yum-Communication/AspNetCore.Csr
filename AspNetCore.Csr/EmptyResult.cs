@@ -31,6 +31,7 @@ public class EmptyResult {
 	/// </summary>
 	/// <param name="contentType">コンテンツタイプ</param>
 	public EmptyResult(string contentType) {
+		Code = 200;
 		Headers = new();
 		ContentType = contentType;
 	}
